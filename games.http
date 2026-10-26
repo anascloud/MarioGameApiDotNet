@@ -1,0 +1,25 @@
+GET http://localhost:5021/games
+###
+GET http://localhost:5021/games/5
+###
+POST http://localhost:5021/games
+Content-Type: application/json
+
+{
+    "name": "Adventure",
+    "genre": "Adventure",
+    "price": 149.99,
+    "releaseDate": "2023-03-16"
+}
+###
+PUT http://localhost:5021/games/1
+Content-Type: application/json
+
+{
+    "name": "Breath of the",
+    "genre": "Nintendo Switch",
+    "price": 19.9,
+    "releaseDate": "2017-07-15"
+}
+###
+DELETE http://localhost:5021/games/1
