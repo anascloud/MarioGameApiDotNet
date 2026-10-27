@@ -7,8 +7,8 @@ Content-Type: application/json
 
 {
     "name": "Adventure",
-    "genre": "Adventure",
-    "price": 149.99,
+    "genreId": 3,
+    "price": 49.99,
     "releaseDate": "2023-03-16"
 }
 ###
