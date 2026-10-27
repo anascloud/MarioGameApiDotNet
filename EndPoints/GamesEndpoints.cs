@@ -8,22 +8,22 @@ namespace GameStore.Api.EndPoints;
 public static class GamesEndpoints
 {   
     const string GetGameEndpointName = "GetGame";
-    private static readonly List<GameSummaryDto> games = [
-        new(
-            1,
-            "Breath of the Wild",
-            "Nintendo Switch",
-            19.9M,
-            new DateOnly(2017, 7, 15)
-        ),
-        new(
-            2,
-            "The Legend of Zelda",
-            "Nintendo Switch",
-            19.3M,
-            new DateOnly(2017, 7, 15)
-        ),
-    ];
+    // private static readonly List<GameSummaryDto> games = [
+    //     new(
+    //         1,
+    //         "Breath of the Wild",
+    //         "Nintendo Switch",
+    //         19.9M,
+    //         new DateOnly(2017, 7, 15)
+    //     ),
+    //     new(
+    //         2,
+    //         "The Legend of Zelda",
+    //         "Nintendo Switch",
+    //         19.3M,
+    //         new DateOnly(2017, 7, 15)
+    //     ),
+    // ];
     public static void MapGamesEndpoints(this WebApplication app)
     {   
         var group = app.MapGroup("/games");
@@ -73,30 +73,29 @@ public static class GamesEndpoints
             return Results.CreatedAtRoute(GetGameEndpointName, new { id = gameDto.Id }, gameDto);
         });
 
-        group.MapPut("/{id}", (int id, UpdateGameDto updatedGame) =>
+        group.MapPut("/{id}", async (int id, UpdateGameDto updatedGame, GameStoreContext dbcontext) =>
         {
-            var index = games.FindIndex(game => game.Id == id);
+            var existingGame = await dbcontext.Games.FindAsync(id);
 
-            if (index == -1)
+            if (existingGame is null)
             {
                 return Results.NotFound();
             }
 
-            games[index] = new GameSummaryDto(
-                id,
-                updatedGame.Name,
-                updatedGame.Genre,
-                updatedGame.Price,
-                updatedGame.ReleaseDate
-            );
+            existingGame.Name = updatedGame.Name;
+            existingGame.GenreId = updatedGame.GenreId;
+            existingGame.Price = updatedGame.Price;
+            existingGame.ReleaseDate = updatedGame.ReleaseDate;
+
+            await dbcontext.SaveChangesAsync();
 
             return Results.NoContent();
         });
 
 
-        group.MapDelete("/{id}", (int id) =>
+        group.MapDelete("/{id}", async (int id, GameStoreContext dbcontext) =>
         {
-            games.RemoveAll(game => game.Id == id);
+            await dbcontext.Games.Where(game => game.Id == id).ExecuteDeleteAsync();
             return Results.NoContent();
         });
     }
