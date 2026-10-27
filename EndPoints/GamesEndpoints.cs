@@ -1,13 +1,14 @@
 using GameStore.Api.Data;
 using GameStore.Api.Dtos;
 using GameStore.Api.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace GameStore.Api.EndPoints;
 
 public static class GamesEndpoints
 {   
     const string GetGameEndpointName = "GetGame";
-    private static readonly List<GameDto> games = [
+    private static readonly List<GameSummaryDto> games = [
         new(
             1,
             "Breath of the Wild",
@@ -27,16 +28,28 @@ public static class GamesEndpoints
     {   
         var group = app.MapGroup("/games");
 
-        group.MapGet("/", () => games);
+        group.MapGet("/", async (GameStoreContext dbcontext) => 
+            await dbcontext.Games.Include(game => game.Genre)
+            .Select(
+                game => new GameSummaryDto(game.Id, game.Name, game.Genre!.Name, game.Price, game.ReleaseDate)
+            ).AsNoTracking().ToListAsync());
 
-        group.MapGet("/{id}", (int id) =>
+        group.MapGet("/{id}", async (int id, GameStoreContext dbcontext) =>
         {
-            var game = games.Find(game => game.Id == id);
-            return game is null ? Results.NotFound() : Results.Ok(game);
+            var game = await dbcontext.Games.FindAsync(id);
+            return game is null ? Results.NotFound() : Results.Ok(
+                new GameDetailsDto(
+                    game.Id,
+                    game.Name,
+                    game.GenreId,
+                    game.Price,
+                    game.ReleaseDate
+                )
+            );
         })
         .WithName(GetGameEndpointName);
 
-        group.MapPost("/", (CreateGameDto newGame, GameStoreContext dbcontext) =>
+        group.MapPost("/", async (CreateGameDto newGame, GameStoreContext dbcontext) =>
         {   
             Game game = new()
             {
@@ -47,7 +60,7 @@ public static class GamesEndpoints
             };
 
             dbcontext.Games.Add(game);
-            dbcontext.SaveChanges();
+            await dbcontext.SaveChangesAsync();
 
             GameDetailsDto gameDto = new(
                 game.Id,
@@ -69,7 +82,7 @@ public static class GamesEndpoints
                 return Results.NotFound();
             }
 
-            games[index] = new GameDto(
+            games[index] = new GameSummaryDto(
                 id,
                 updatedGame.Name,
                 updatedGame.Genre,

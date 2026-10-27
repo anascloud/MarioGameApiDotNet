@@ -1,15 +1,15 @@
 GET http://localhost:5021/games
 ###
-GET http://localhost:5021/games/5
+GET http://localhost:5021/games/1
 ###
 POST http://localhost:5021/games
 Content-Type: application/json
 
 {
-    "name": "Adventure",
-    "genreId": 3,
-    "price": 49.99,
-    "releaseDate": "2023-03-16"
+    "name": "Mission",
+    "genreId": 4,
+    "price": 29.99,
+    "releaseDate": "2023-03-15"
 }
 ###
 PUT http://localhost:5021/games/1
